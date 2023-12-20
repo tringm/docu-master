@@ -1,6 +1,8 @@
 from dynaconf import Dynaconf
 from pydantic import BaseModel
 
+APPLICATION_NAME = "docu-master"
+
 settings = Dynaconf(
     envvar_prefix="DYNACONF",
     settings_files=["settings.toml"],
