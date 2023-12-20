@@ -11,11 +11,29 @@ dynaconf = "^3.2.4"
 pydantic = "^2.5.2"
 fastapi = "^0.105.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
+python-multipart = "^0.0.6"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+httpx = "*"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = """\
+    --cov src \
+    --cov tests \
+    --cov-report term-missing \
+    --no-cov-on-fail \
+"""
+
+log_format = "%(asctime)s %(levelname)s %(message)s"
+log_date_format = "%Y-%m-%dT%H:%M:%S.%f"
 
 [tool.black]
 target-version = ["py310", "py311"]
@@ -27,7 +45,6 @@ plugins = [
     "pydantic.mypy"
 ]
 
-disallow_any_unimported = true
 disallow_untyped_defs = true
 no_implicit_optional = true
 strict_equality = true

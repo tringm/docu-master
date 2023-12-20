@@ -12,5 +12,6 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --only main --no-root
 
 COPY src ./src
+COPY assets ./assets
 
 CMD ["python", "-m", "src.app"]
