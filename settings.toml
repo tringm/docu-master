@@ -4,3 +4,8 @@ log_level = "INFO"
 [default.uvicorn]
 host = "0.0.0.0"
 port = 8000
+
+[default.chromadb]
+database = "default_database"
+distance_score_threshold = 1
+client_configs = {host = "localhost", port = "8079"}

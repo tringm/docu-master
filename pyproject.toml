@@ -12,6 +12,7 @@ pydantic = "^2.5.2"
 fastapi = "^0.105.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 python-multipart = "^0.0.6"
+chromadb = "^0.4.21"
 
 
 [tool.poetry.group.dev.dependencies]

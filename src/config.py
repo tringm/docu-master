@@ -23,8 +23,15 @@ class UvicornConfig(BaseModel):
     port: int
 
 
+class ChromaDBConfig(BaseModel):
+    database: str
+    distance_score_threshold: float
+    client_configs: dict
+
+
 class RootConfig(BaseModel):
     uvicorn: UvicornConfig
+    chromadb: ChromaDBConfig
 
 
 CONFIGS = RootConfig.model_validate({k.lower(): v for k, v in settings.as_dict().items()})

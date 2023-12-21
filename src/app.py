@@ -10,8 +10,6 @@ from .logging import logger
 
 app = FastAPI()
 
-logger.info("APP")
-
 
 class PATHS:
     upload_file = "/upload/"
