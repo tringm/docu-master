@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
-from .config import DOCS_DIR_PATH, get_config_model
+from .config import CONFIGS, DOCS_DIR_PATH
 from .logging import logger
 
 app = FastAPI()
@@ -35,8 +35,7 @@ async def create_upload_file(file: UploadFile) -> Response:
 
 
 def main() -> None:
-    cfg = get_config_model().uvicorn
-    uvicorn.run(app, **cfg.model_dump())
+    uvicorn.run(app, **CONFIGS.uvicorn.model_dump())
 
 
 if __name__ == "__main__":

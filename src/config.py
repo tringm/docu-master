@@ -27,7 +27,4 @@ class RootConfig(BaseModel):
     uvicorn: UvicornConfig
 
 
-def get_config_model() -> RootConfig:
-    # dynaconf parser capitalizes root keys
-    settings_dict = {k.lower(): v for k, v in settings.as_dict().items()}
-    return RootConfig.model_validate(settings_dict)
+CONFIGS = RootConfig.model_validate({k.lower(): v for k, v in settings.as_dict().items()})
