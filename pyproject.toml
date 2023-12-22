@@ -20,7 +20,6 @@ semantic-text-splitter = "^0.2.4"
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
 pytest-cov = "*"
-pytest-mock = "*"
 httpx = "*"
 
 [build-system]

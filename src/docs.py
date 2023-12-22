@@ -63,13 +63,18 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         query: str,
         n_results: int = 10,
         collection_name: str = DEFAULT_COLLECTION_NAME,
+        document_ids: list[str] | None = None,
     ) -> list[tuple[DocumentChunk, float]]:
         collection = self.get_collection(name=collection_name)
+        where = None
+        if document_ids:
+            where = {"document_id": {"$in": document_ids}}
 
         try:
             res = collection.query(
                 query_texts=query,
                 n_results=n_results,
+                where=where,
                 include=["metadatas", "documents", "distances"],
             )
         except Exception:
@@ -82,6 +87,18 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
                 res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0], strict=True
             )
             if score < self.distance_score_threshold
+        ]
+
+    def get_chunk_by_document_id(
+        self, document_id: str, collection_name: str = DEFAULT_COLLECTION_NAME, **kwargs: Any
+    ) -> list[DocumentChunk]:
+        collection = self.get_collection(name=collection_name)
+
+        res = collection.get(where={"document_id": {"$eq": document_id}}, include=["metadatas", "documents"], **kwargs)
+
+        return [
+            DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta))
+            for c_id, text, meta in zip(res["ids"], res["documents"], res["metadatas"], strict=True)
         ]
 
     def parse_pdf_file(

@@ -1,11 +1,13 @@
-import shutil
 from collections.abc import Callable
+from typing import Annotated
+from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi import Depends, FastAPI, Request, UploadFile
+from fastapi.responses import JSONResponse, Response
 
-from .config import CONFIGS, DOCS_DIR_PATH
+from .config import CONFIGS
+from .docs import DocumentService
 from .logging import logger
 
 app = FastAPI()
@@ -24,12 +26,18 @@ async def handling_exception(request: Request, call_next: Callable) -> Response:
         return JSONResponse(status_code=500, content={"error": e.__class__.__name__, "messages": e.args})
 
 
+def get_document_service() -> DocumentService:
+    return DocumentService()
+
+
 @app.post(path=PATHS.upload_file)
-async def create_upload_file(file: UploadFile) -> Response:
-    logger.info(f"uploading {file.filename}")
-    with (DOCS_DIR_PATH / file.filename).open(mode="wb") as f:
-        shutil.copyfileobj(file.file, f)
-    return HTMLResponse(status_code=204)
+async def create_upload_file(
+    file: UploadFile, document_service: Annotated[DocumentService, Depends(get_document_service)]
+) -> Response:
+    doc_id = str(uuid4())
+    doc_chunks = document_service.parse_pdf_file(stream=file.file, doc_id=doc_id)
+    document_service.add_multiple_document_chunks(chunks=doc_chunks)
+    return JSONResponse(status_code=200, content={"document_id": doc_id})
 
 
 def main() -> None:

@@ -5,7 +5,10 @@ import pytest
 
 from src.docs import DocumentChunk, DocumentService
 
-from .data import EXAMPLE_PDF_FILE, load_hotpot_qa_test_cases
+from .data import RESOURCE_DIR_PATH, load_hotpot_qa_test_cases
+
+EXAMPLE_PDF_FILE = RESOURCE_DIR_PATH / "cobra_wiki.pdf"
+EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT = 5
 
 
 def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
@@ -21,11 +24,6 @@ def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
     prec = 1.0 * tp / (tp + fp) if tp + fp > 0 else 0.0
     recall = 1.0 * tp / (tp + fn) if tp + fn > 0 else 0.0
     return 2 * prec * recall / (prec + recall) if prec + recall > 0 else 0.0
-
-
-@pytest.fixture(scope="module")
-def document_service() -> DocumentService:
-    return DocumentService(chromadb_in_memory=True)
 
 
 @pytest.fixture
@@ -70,6 +68,7 @@ def test_document_retrieval(
 
 def test_parse_pdf(document_service: DocumentService) -> None:
     chunks = document_service.parse_pdf_file(stream=EXAMPLE_PDF_FILE, doc_id=str(uuid4()))
-    expected_chunk_count = 5
-    assert len(chunks) == expected_chunk_count, f"Expected return {expected_chunk_count} chunks"
+    assert (
+        len(chunks) == EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
+    ), f"Expected return {EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT} chunks"
     assert all(isinstance(chunk, DocumentChunk) and chunk.text for chunk in chunks)
