@@ -2,11 +2,10 @@ from collections.abc import Callable, Iterator
 from uuid import uuid4
 
 import pytest
-from chromadb import Collection
 
-from src.docs import ChromaDB
+from src.docs import DocumentChunk, DocumentService
 
-from .data import load_hotpot_qa_test_cases
+from .data import EXAMPLE_PDF_FILE, load_hotpot_qa_test_cases
 
 
 def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
@@ -25,29 +24,30 @@ def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
 
 
 @pytest.fixture(scope="module")
-def chromadb() -> ChromaDB:
-    return ChromaDB(in_memory=True)
+def document_service() -> DocumentService:
+    return DocumentService(chromadb_in_memory=True)
 
 
 @pytest.fixture
-def create_collection(chromadb: ChromaDB) -> Iterator[Callable[[], Collection]]:
+def create_collection(document_service: DocumentService) -> Iterator[Callable[[], str]]:
     created_cols = []
 
-    def _create_collection() -> Collection:
+    def _create_collection() -> str:
         col_name = str(uuid4())
         created_cols.append(col_name)
-        return chromadb.client.create_collection(name=col_name)
+        document_service.chromadb_client.create_collection(name=col_name)
+        return col_name
 
     yield _create_collection
 
     for col in created_cols:
-        chromadb.client.delete_collection(name=col)
+        document_service.chromadb_client.delete_collection(name=col)
 
 
 @pytest.mark.evaluation
-def test_retrieval(
-    chromadb: ChromaDB,
-    create_collection: Callable[[], Collection],
+def test_document_retrieval(
+    document_service: DocumentService,
+    create_collection: Callable[[], str],
 ) -> None:
     test_cases = load_hotpot_qa_test_cases()
 
@@ -55,8 +55,8 @@ def test_retrieval(
 
     for case in test_cases:
         collection = create_collection()
-        chromadb.add_multiple_document_chunks(collection=collection, chunks=case.document_chunks)
-        retrieval_res = chromadb.search(collection=collection, query=case.question)
+        document_service.add_multiple_document_chunks(collection_name=collection, chunks=case.document_chunks)
+        retrieval_res = document_service.search(collection_name=collection, query=case.question)
 
         retrieved_docs = [chunk[0].id for chunk in retrieval_res]
         expected_docs = [chunk.id for chunk in case.source_chunks]
@@ -66,3 +66,10 @@ def test_retrieval(
     avg_f1_score = sum(f1_scores) / len(f1_scores)
     min_f1_score = 0.39
     assert avg_f1_score > min_f1_score, f"Expected avg f1 score to be above {min_f1_score}"
+
+
+def test_parse_pdf(document_service: DocumentService) -> None:
+    chunks = document_service.parse_pdf_file(fp=EXAMPLE_PDF_FILE, doc_id=str(uuid4()))
+    expected_chunk_count = 2
+    assert len(chunks) == expected_chunk_count, f"Expected return {expected_chunk_count} chunks"
+    assert all(isinstance(chunk, DocumentChunk) for chunk in chunks)
