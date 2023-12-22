@@ -8,9 +8,9 @@ from httpx import Client, codes
 from pytest_mock import MockFixture
 
 from src.app import PATHS
-from tests import RESOURCE_DIR_PATH, TEST_DIR_PATH
+from tests import TEST_DIR_PATH
 
-EXAMPLE_PDF_FILE = RESOURCE_DIR_PATH / "multilang.pdf"
+from .data import EXAMPLE_PDF_FILE
 
 
 @pytest.fixture

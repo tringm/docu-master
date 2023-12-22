@@ -6,7 +6,7 @@ from chromadb import Collection
 
 from src.docs import ChromaDB
 
-from .evaluation_data import load_hotpot_qa_test_cases
+from .data import load_hotpot_qa_test_cases
 
 
 def f1_score(predicted: list[str], gold_standard: list[str]) -> float:

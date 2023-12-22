@@ -8,6 +8,7 @@ from tests import RESOURCE_DIR_PATH
 
 EVALUATION_DATA_DIR_PATH = RESOURCE_DIR_PATH / "evaluation"
 HOTPOT_QA_FILE_PATH = EVALUATION_DATA_DIR_PATH / "hotpot_qa.json"
+EXAMPLE_PDF_FILE = RESOURCE_DIR_PATH / "cobra_wiki.pdf"
 
 
 class RetrievalTestCase(BaseModel):

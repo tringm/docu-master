@@ -1,7 +1,10 @@
-import typing
 from collections.abc import Iterable
+from pathlib import Path
+from uuid import uuid4
 
 from chromadb import Collection, EphemeralClient, HttpClient
+from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, ConfigDict
 
 from .config import CONFIGS
@@ -46,7 +49,7 @@ class ChromaDB(metaclass=ThreadUnsafeSingletonMeta):
         collection: Collection,
         query: str,
         n_results: int = 10,
-    ) -> list[tuple[DocumentChunk, typing.Any]]:
+    ) -> list[tuple[DocumentChunk, float]]:
         res = collection.query(
             query_texts=query,
             n_results=n_results,
@@ -60,3 +63,14 @@ class ChromaDB(metaclass=ThreadUnsafeSingletonMeta):
             )
             if score < self.distance_score_threshold
         ]
+
+
+def parse_pdf_file(fp: Path, doc_id: str) -> list[DocumentChunk]:
+    pdf_loader = PyPDFLoader(str(fp))
+    documents = pdf_loader.load_and_split(text_splitter=RecursiveCharacterTextSplitter())
+    return [
+        DocumentChunk(
+            id=str(uuid4()), text=doc.page_content, metadata=DocumentChunkMetadata(document_id=doc_id, **doc.metadata)
+        )
+        for idx, doc in enumerate(documents)
+    ]

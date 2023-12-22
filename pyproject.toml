@@ -13,6 +13,8 @@ fastapi = "^0.105.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 python-multipart = "^0.0.6"
 chromadb = "^0.4.21"
+langchain = "^0.0.352"
+pypdf = "^3.17.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -28,7 +30,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 addopts = """\
     --cov src \
-    --cov tests \
     --cov-report term-missing \
     --no-cov-on-fail \
 """
