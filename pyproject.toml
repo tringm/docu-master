@@ -13,8 +13,8 @@ fastapi = "^0.105.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 python-multipart = "^0.0.6"
 chromadb = "^0.4.21"
-langchain = "^0.0.352"
 pypdf = "^3.17.3"
+semantic-text-splitter = "^0.2.4"
 
 
 [tool.poetry.group.dev.dependencies]

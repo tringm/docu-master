@@ -69,7 +69,7 @@ def test_document_retrieval(
 
 
 def test_parse_pdf(document_service: DocumentService) -> None:
-    chunks = document_service.parse_pdf_file(fp=EXAMPLE_PDF_FILE, doc_id=str(uuid4()))
-    expected_chunk_count = 2
+    chunks = document_service.parse_pdf_file(stream=EXAMPLE_PDF_FILE, doc_id=str(uuid4()))
+    expected_chunk_count = 5
     assert len(chunks) == expected_chunk_count, f"Expected return {expected_chunk_count} chunks"
-    assert all(isinstance(chunk, DocumentChunk) for chunk in chunks)
+    assert all(isinstance(chunk, DocumentChunk) and chunk.text for chunk in chunks)

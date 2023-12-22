@@ -1,11 +1,12 @@
 from collections.abc import Iterable
 from pathlib import Path
+from typing import IO, Any
 from uuid import uuid4
 
 from chromadb import Collection, EphemeralClient, HttpClient
-from langchain.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, ConfigDict
+from pypdf import PdfReader
+from semantic_text_splitter import CharacterTextSplitter
 
 from .config import CONFIGS
 from .logging import get_logger
@@ -83,16 +84,27 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
             if score < self.distance_score_threshold
         ]
 
-    def parse_pdf_file(self, fp: Path, doc_id: str) -> list[DocumentChunk]:
-        fp_str = str(fp.resolve())
-        self.logger.info("Parsing PDF file %s", fp_str)
-        pdf_loader = PyPDFLoader(file_path=fp_str)
-        documents = pdf_loader.load_and_split(text_splitter=RecursiveCharacterTextSplitter())
-        return [
-            DocumentChunk(
-                id=str(uuid4()),
-                text=doc.page_content,
-                metadata=DocumentChunkMetadata(document_id=doc_id, **doc.metadata),
-            )
-            for idx, doc in enumerate(documents)
-        ]
+    def parse_pdf_file(
+        self, stream: str | IO[Any] | Path, doc_id: str, chunk_capacity: int | tuple[int, int] = (700, 1000)
+    ) -> list[DocumentChunk]:
+        self.logger.info("Parsing PDF stream")
+        txt_splitter = CharacterTextSplitter(trim_chunks=True)
+
+        doc_chunks = []
+
+        reader = PdfReader(stream)
+        doc_meta = reader.metadata
+
+        for page_idx, page in enumerate(reader.pages):
+            page_txt = page.extract_text()
+            txt_chunks = txt_splitter.chunks(text=page_txt, chunk_capacity=chunk_capacity)
+            doc_chunks += [
+                DocumentChunk(
+                    id=str(uuid4()),
+                    text=txt,
+                    metadata=DocumentChunkMetadata(document_id=doc_id, page=page_idx, **doc_meta),
+                )
+                for txt in txt_chunks
+            ]
+
+        return doc_chunks
