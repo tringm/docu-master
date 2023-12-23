@@ -16,6 +16,9 @@ class RetrievalTestCase(BaseModel):
     document_chunks: list[DocumentChunk]
     source_chunks: list[DocumentChunk]
 
+    def sources_as_str(self) -> str:
+        return "\n".join(f"- {chunk.text}" for chunk in self.source_chunks)
+
 
 class HotpotQATestCase(BaseModel):
     class Context(BaseModel):

@@ -1,0 +1,20 @@
+Question: Were Scott Derrickson and Ed Wood of the same nationality?
+Expected:
+- Scott Derrickson (born July 16, 1966) is an American director, screenwriter and producer.
+- Edward Davis Wood Jr. (October 10, 1924 – December 10, 1978) was an American filmmaker, actor, writer, producer, and director.
+Retrieved:
+-  Woodson and its accompanying Woodson Lake and Wood Hollow are the namesake for Ed Wood Sr., a prominent plantation owner, trader, and businessman at the turn of the 20th century.
+- Scott Derrickson (born July 16, 1966) is an American director, screenwriter and producer.
+F1 Score: 0.5
+----------
+Question: What government position was held by the woman who portrayed Corliss Archer in the film Kiss and Tell?
+Expected:
+- Shirley Temple Black (April 23, 1928 – February 10, 2014) was an American actress, singer, dancer, businesswoman, and diplomat who was Hollywood's number one box-office draw as a child actress from 1935 to 1938.
+-  As an adult, she was named United States ambassador to Ghana and to Czechoslovakia and also served as Chief of Protocol of the United States.
+- Kiss and Tell is a 1945 American comedy film starring then 17-year-old Shirley Temple as Corliss Archer.
+Retrieved:
+- Kiss and Tell is a 1945 American comedy film starring then 17-year-old Shirley Temple as Corliss Archer.
+- A Kiss for Corliss is a 1949 American comedy film directed by Richard Wallace and written by Howard Dimsdale.
+- Meet Corliss Archer is an American television sitcom that aired on CBS (July 13, 1951 - August 10, 1951) and in syndication via the Ziv Company from April to December 1954.
+F1 Score: 0.3333333333333333
+----------

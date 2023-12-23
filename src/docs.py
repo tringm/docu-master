@@ -64,7 +64,7 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         n_results: int = 10,
         collection_name: str = DEFAULT_COLLECTION_NAME,
         document_ids: list[str] | None = None,
-    ) -> list[tuple[DocumentChunk, float]]:
+    ) -> list[DocumentChunk]:
         collection = self.get_collection(name=collection_name)
         where = None
         if document_ids:
@@ -82,7 +82,7 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
             raise
 
         return [
-            (DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta)), score)
+            DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta))
             for c_id, text, meta, score in zip(
                 res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0], strict=True
             )
