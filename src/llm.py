@@ -21,6 +21,7 @@ class LLMService(metaclass=ThreadUnsafeSingletonMeta):
     def run(self, prompt: Prompt, prompt_inputs: dict) -> str:
         formatted_prompt = prompt.format_inputs(inputs=prompt_inputs)
         try:
+            self.logger.debug("Running prompt '''%s'''", formatted_prompt)
             llm_out = self.llm.create_completion(prompt=formatted_prompt, **self.cfg.prompt_configs)
         except Exception as e:
             self.logger.exception("Failed to get llm outputs with prompt '''%s''': %s", formatted_prompt, e)
@@ -35,13 +36,15 @@ class LLMService(metaclass=ThreadUnsafeSingletonMeta):
         return result  # type: ignore
 
     def answer_question_based_on_sources(self, question: str, sources: list[str]) -> str:
-        context = "\n".join(f"-{src}" for src in sources)
+        context = "\n".join(f"- {src}" for src in sources)
         answer = self.run(
             prompt=self.qa_prompt,
             prompt_inputs={QAPrompt.INPUT_CONTEXT_KEY: context, QAPrompt.INPUT_QUESTION_KEY: question},
         )
         answer = _filter_text_after_key(text=answer, key="Answer:")
-        return _filter_text_after_key(text=answer, key="A:")
+        answer = _filter_text_after_key(text=answer, key="A:")
+        self.logger.debug("Got answer %s", answer)
+        return answer
 
 
 def _filter_text_after_key(text: str, key: str) -> str:

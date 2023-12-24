@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import Client
 
-from src.app import app, get_document_service
+from src.app import app, get_document_service, get_llm_service
 from src.docs import DocumentService
 from src.llm import LLMService
 from src.logging import get_logger
@@ -47,9 +47,10 @@ def llm_service() -> LLMService:
 
 
 @pytest.fixture(scope="session")
-def application(document_service: DocumentService) -> FastAPI:
+def application(document_service: DocumentService, llm_service: LLMService) -> FastAPI:
     app.dependency_overrides = {
         get_document_service: lambda: document_service,
+        get_llm_service: lambda: llm_service,
     }
     return app
 
