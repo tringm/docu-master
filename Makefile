@@ -2,3 +2,8 @@ download_evaluation_data: HOTPOT_QA_URL = "https://datasets-server.huggingface.c
 download_evaluation_data: OUTPUT_DIR = "tests/resources/evaluation"
 download_evaluation_data:
 	@curl -X GET $(HOTPOT_QA_URL) | jq '.rows | map(.row)' > $(OUTPUT_DIR)/hotpot_qa.json
+
+
+download-model:
+	@echo "Downloading TheBloke phi-2.Q4_K_M.gguf"
+	@curl -X GET "https://cdn-lfs-us-1.huggingface.co/repos/df/73/df7366134ed3798e8afca879a1fb9eb2741134a7d549d744d7163b5d84cf3e2d/324356668fa5ba9f4135de348447bb2bbe2467eaa1b8fcfb53719de62fbd2499?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27phi-2.Q4_K_M.gguf%3B+filename%3D%22phi-2.Q4_K_M.gguf%22%3B&Expires=1703534977&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTcwMzUzNDk3N319LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy11cy0xLmh1Z2dpbmdmYWNlLmNvL3JlcG9zL2RmLzczL2RmNzM2NjEzNGVkMzc5OGU4YWZjYTg3OWExZmI5ZWIyNzQxMTM0YTdkNTQ5ZDc0NGQ3MTYzYjVkODRjZjNlMmQvMzI0MzU2NjY4ZmE1YmE5ZjQxMzVkZTM0ODQ0N2JiMmJiZTI0NjdlYWExYjhmY2ZiNTM3MTlkZTYyZmJkMjQ5OT9yZXNwb25zZS1jb250ZW50LWRpc3Bvc2l0aW9uPSoifV19&Signature=Ab7Wh1bxDhnohlPp7FvnyeQoKEtqx3%7EPoXf0WD7ugqGxoPmc1ITHxGMu5lsnXOwdoPvJzoZy%7E6kjWAKsmkJQ99C9kIVwfWtYus9dr9Hpdn6bnBpXMgcYB6gnrbRGukdixeb0TTu6wTKctFD2ojZjxU4nYNoax9wPU0PTGemw3OIxdfEnafEltXsOE28z1N99NoRVUjpIjV6UwsXR85DgaWv1fPjkkI7bAq73DtjSj-98WfOeQgBIkq3I%7EZN-xbb1SZtRAHDCjakzDQfmd5fGees5sSFAueI3ghKfZhUj7p3imJVhX3ynD5GarvV28vffH61ZX8kkw5Wncmr5qfgoUg__&Key-Pair-Id=KCD77M1F0VK2B" --create-dirs -o models/phi-2.Q4_K_M.gguf
