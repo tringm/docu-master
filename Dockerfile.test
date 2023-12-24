@@ -9,10 +9,10 @@ COPY poetry.toml .
 COPY poetry.lock .
 
 RUN poetry config virtualenvs.create false
-RUN poetry install --only main --no-root
+RUN poetry install --with=dev --no-root
 
 COPY src ./src
 COPY settings.toml ./settings.toml
 RUN mkdir "models"
 
-CMD ["python", "-m", "src.app"]
+COPY tests ./tests

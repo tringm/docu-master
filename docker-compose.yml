@@ -1,0 +1,52 @@
+version: '3.8'
+
+x-bind-models-volume: &bind-models-volume
+  type: bind
+  source: ./models
+  target: /app/models
+
+services:
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:0.4.22.dev11
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "apt-get update && apt-get install -y curl && curl -f http://localhost:8000/api/v1/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  docu-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    ports:
+      - "8080:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      DYNACONF_CHROMADB__client_configs__host: "chromadb"
+      DYNACONF_CHROMADB__client_configs__port: "8000"
+      DYNACONF_uvicorn__port: 8000
+    volumes:
+      - *bind-models-volume
+
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    depends_on:
+      docu-master:
+        condition: service_healthy
+    environment:
+      DYNACONF_CHROMADB__client_configs__host: "chromadb"
+      DYNACONF_CHROMADB__client_configs__port: "8000"
+      TEST_API_URL: http://docu-master:8000/
+    volumes:
+      - *bind-models-volume
+    command: pytest -s --integration-test -k api

@@ -80,3 +80,6 @@ venv.bak/
 
 # Ruff
 .ruff_cache/
+
+# Model files
+models/

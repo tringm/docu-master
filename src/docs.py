@@ -75,7 +75,7 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         if document_ids:
             where = {"document_id": {"$in": document_ids}}
 
-        log_msg = f"Query col({collection_name}) with {query}"
+        log_msg = f"Query colection({collection_name}) with '{query}'"
         if where:
             log_msg += f" {where}"
         try:

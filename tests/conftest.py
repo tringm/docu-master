@@ -19,11 +19,13 @@ TEST_OUTPUTS_DIR_PATH = TEST_DIR_PATH / "outputs"
 class _FLAGS:
     run_evaluation_tests = "--run-eval"
     run_comparison = "--output-diff"
+    integration_tests = "--integration-test"
 
 
 def pytest_addoption(parser) -> None:  # type: ignore
     parser.addoption(_FLAGS.run_evaluation_tests, action="store_true", help="run evaluation tests")
     parser.addoption(_FLAGS.run_comparison, action="store_true", help="show changes of test output file")
+    parser.addoption(_FLAGS.integration_tests, action="store_true", help="run integration tests")
 
 
 def pytest_collection_modifyitems(session: pytest.Session, config: pytest.Config, items: list[pytest.Item]) -> None:
@@ -37,7 +39,10 @@ def pytest_collection_modifyitems(session: pytest.Session, config: pytest.Config
 
 
 @pytest.fixture(scope="session")
-def document_service() -> DocumentService:
+def document_service(request: pytest.FixtureRequest) -> DocumentService:
+    integration_mode_enabled = request.config.getoption(_FLAGS.integration_tests)
+    if integration_mode_enabled:
+        return DocumentService()
     return DocumentService(chromadb_in_memory=True)
 
 
@@ -55,8 +60,19 @@ def application(document_service: DocumentService, llm_service: LLMService) -> F
     return app
 
 
+def _get_required_env_var(env_var: str) -> str:
+    val = os.getenv(env_var)
+    if not val:
+        raise KeyError(f"Missing required env var `{env_var}`")
+    return val
+
+
 @pytest.fixture(scope="session")
-def client(application: FastAPI) -> Client:
+def client(request: pytest.FixtureRequest, application: FastAPI) -> Client:
+    e2e_mode_enabled = request.config.getoption(_FLAGS.integration_tests)
+    if e2e_mode_enabled:
+        return Client(base_url=_get_required_env_var(env_var="TEST_API_URL"), timeout=60.0)
+
     return TestClient(app=application)
 
 
