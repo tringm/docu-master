@@ -9,6 +9,7 @@ from httpx import Client
 
 from src.app import app, get_document_service
 from src.docs import DocumentService
+from src.llm import LLMService
 from src.logging import get_logger
 from tests import TEST_DIR_PATH
 
@@ -38,6 +39,11 @@ def pytest_collection_modifyitems(session: pytest.Session, config: pytest.Config
 @pytest.fixture(scope="session")
 def document_service() -> DocumentService:
     return DocumentService(chromadb_in_memory=True)
+
+
+@pytest.fixture(scope="session")
+def llm_service() -> LLMService:
+    return LLMService()
 
 
 @pytest.fixture(scope="session")

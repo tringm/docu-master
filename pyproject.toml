@@ -15,6 +15,7 @@ python-multipart = "^0.0.6"
 chromadb = "^0.4.21"
 pypdf = "^3.17.3"
 semantic-text-splitter = "^0.2.4"
+llama-cpp-python = "^0.2.24"
 
 
 [tool.poetry.group.dev.dependencies]

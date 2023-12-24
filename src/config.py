@@ -5,9 +5,7 @@ from pydantic import BaseModel
 
 SRC_PATH = Path(__file__).parent.resolve()
 PROJECT_ROOT_PATH = SRC_PATH.parent
-ASSETS_DIR_PATH = PROJECT_ROOT_PATH / "assets"
-DOCS_DIR_PATH = ASSETS_DIR_PATH / "docs"
-
+MODEL_DIR_PATH = PROJECT_ROOT_PATH / "models"
 
 APPLICATION_NAME = "docu-master"
 
@@ -29,9 +27,16 @@ class ChromaDBConfig(BaseModel):
     client_configs: dict
 
 
+class LLMConfig(BaseModel):
+    llm_name: str
+    llm_configs: dict
+    prompt_configs: dict
+
+
 class RootConfig(BaseModel):
     uvicorn: UvicornConfig
     chromadb: ChromaDBConfig
+    llm: LLMConfig
 
 
 CONFIGS = RootConfig.model_validate({k.lower(): v for k, v in settings.as_dict().items()})

@@ -424,6 +424,17 @@ wrapt = ">=1.10,<2"
 dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "sphinx (<2)", "tox"]
 
 [[package]]
+name = "diskcache"
+version = "5.6.3"
+description = "Disk Cache -- Disk and file backed persistent cache."
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19"},
+    {file = "diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc"},
+]
+
+[[package]]
 name = "dynaconf"
 version = "3.2.4"
 description = "The dynamic configurator for your Python Project"
@@ -877,6 +888,27 @@ websocket-client = ">=0.32.0,<0.40.0 || >0.40.0,<0.41.dev0 || >=0.43.dev0"
 
 [package.extras]
 adal = ["adal (>=1.0.2)"]
+
+[[package]]
+name = "llama-cpp-python"
+version = "0.2.24"
+description = "Python bindings for the llama.cpp library"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "llama_cpp_python-0.2.24.tar.gz", hash = "sha256:85f8fd110b4b90599d5ff427bd4a1a4db6e70817c60ba8aa609fa5c645761ec1"},
+]
+
+[package.dependencies]
+diskcache = ">=5.6.1"
+numpy = ">=1.20.0"
+typing-extensions = ">=4.5.0"
+
+[package.extras]
+all = ["llama_cpp_python[dev,server,test]"]
+dev = ["black (>=23.3.0)", "httpx (>=0.24.1)", "mkdocs (>=1.4.3)", "mkdocs-material (>=9.1.18)", "mkdocstrings[python] (>=0.22.0)", "pytest (>=7.4.0)", "twine (>=4.0.2)"]
+server = ["fastapi (>=0.100.0)", "pydantic-settings (>=2.0.1)", "sse-starlette (>=1.6.1)", "starlette-context (>=0.3.6,<0.4)", "uvicorn (>=0.22.0)"]
+test = ["httpx (>=0.24.1)", "pytest (>=7.4.0)", "scipy (>=1.10)"]
 
 [[package]]
 name = "mmh3"
@@ -2413,4 +2445,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "cbc5161553aa50e2852148017145de238ae526cd0ad10dc7fd5289cd4cb96229"
+content-hash = "f9ff7eac960481aee4c79a69f1584f08b237b1c3c7236f67d06d120418de6986"

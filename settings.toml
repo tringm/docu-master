@@ -9,3 +9,18 @@ port = 8000
 database = "default_database"
 distance_score_threshold = 1
 client_configs = {host = "localhost", port = "8079"}
+
+[default.llm]
+llm_name = "phi-2.Q4_K_M.gguf"
+
+[default.llm.llm_configs]
+n_ctx = 2048  # model context length
+n_threads = 16  # CPU thread
+n_gpu_layers = 0  # Disable GPU
+
+[default.llm.prompt_configs]
+max_tokens = -1  # use model context length
+temperature = 0.7
+repeat_penalty = 1.176
+top_k = 40
+top_p = 0.1
