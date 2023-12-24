@@ -61,7 +61,7 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
     def search(
         self,
         query: str,
-        n_results: int = 10,
+        n_results: int = 3,
         collection_name: str = DEFAULT_COLLECTION_NAME,
         document_ids: list[str] | None = None,
     ) -> list[DocumentChunk]:
@@ -69,18 +69,19 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         where = None
         if document_ids:
             where = {"document_id": {"$in": document_ids}}
-
         try:
+            self.logger.debug("Querying %s with '%s'", collection_name, query)
             res = collection.query(
                 query_texts=query,
                 n_results=n_results,
                 where=where,
                 include=["metadatas", "documents", "distances"],
             )
-        except Exception:
-            self.logger.exception("Failed to search with query %s", query)
+        except Exception as e:
+            self.logger.exception("Failed to query %s with '%s': %s", collection_name, query, e)
             raise
 
+        self.logger.info("Querying %s with '%s' got %s results", collection_name, query, len(res["ids"]))
         return [
             DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta))
             for c_id, text, meta, score in zip(
@@ -102,7 +103,7 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         ]
 
     def parse_pdf_file(
-        self, stream: str | IO[Any] | Path, doc_id: str, chunk_capacity: int | tuple[int, int] = (700, 1000)
+        self, stream: str | IO[Any] | Path, doc_id: str, chunk_capacity: int | tuple[int, int] = (256, 512)
     ) -> list[DocumentChunk]:
         self.logger.info("Parsing PDF stream")
         txt_splitter = CharacterTextSplitter(trim_chunks=True)

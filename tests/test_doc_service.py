@@ -9,7 +9,7 @@ from src.docs import DocumentChunk, DocumentService
 from .data import RESOURCE_DIR_PATH, load_hotpot_qa_test_cases
 
 EXAMPLE_PDF_FILE = RESOURCE_DIR_PATH / "cobra_wiki.pdf"
-EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT = 5
+EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT = 11
 
 
 def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
