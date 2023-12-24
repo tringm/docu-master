@@ -1,6 +1,6 @@
 from logging import Logger, config, getLogger
 
-from .config import APPLICATION_NAME, settings
+from .config import APPLICATION_NAME, CONFIGS
 
 _LOG_CONFIG = {
     "version": 1,
@@ -10,7 +10,7 @@ _LOG_CONFIG = {
     },
     "handlers": {
         "default": {
-            "level": "INFO",
+            "level": CONFIGS.log_level,
             "class": "logging.StreamHandler",
             "formatter": "default",
             "stream": "ext://sys.stdout",
@@ -19,11 +19,11 @@ _LOG_CONFIG = {
     "loggers": {
         "": {
             "handlers": ["default"],
-            "level": settings.log_level,
+            "level": CONFIGS.log_level,
         },
         APPLICATION_NAME: {
             "handlers": ["default"],
-            "level": settings.log_level,
+            "level": CONFIGS.log_level,
         },
     },
 }

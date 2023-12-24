@@ -37,6 +37,7 @@ class RootConfig(BaseModel):
     uvicorn: UvicornConfig
     chromadb: ChromaDBConfig
     llm: LLMConfig
+    log_level: str
 
 
 CONFIGS = RootConfig.model_validate({k.lower(): v for k, v in settings.as_dict().items()})
