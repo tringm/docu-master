@@ -69,8 +69,11 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
         where = None
         if document_ids:
             where = {"document_id": {"$in": document_ids}}
+
+        log_msg = f"Query col({collection_name}) with {query}"
+        if where:
+            log_msg += f" {where}"
         try:
-            self.logger.debug("Querying %s with '%s'", collection_name, query)
             res = collection.query(
                 query_texts=query,
                 n_results=n_results,
@@ -78,17 +81,18 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
                 include=["metadatas", "documents", "distances"],
             )
         except Exception as e:
-            self.logger.exception("Failed to query %s with '%s': %s", collection_name, query, e)
+            self.logger.exception("Failed to %s: %s", log_msg, e)
             raise
 
-        self.logger.info("Querying %s with '%s' got %s results", collection_name, query, len(res["ids"]))
-        return [
+        ret_chunks = [
             DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta))
             for c_id, text, meta, score in zip(
                 res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0], strict=True
             )
             if score < self.distance_score_threshold
         ]
+        self.logger.info("%s got %s results", log_msg, len(ret_chunks))
+        return ret_chunks
 
     def get_chunk_by_document_id(
         self, document_id: str, collection_name: str = DEFAULT_COLLECTION_NAME, **kwargs: Any

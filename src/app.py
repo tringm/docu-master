@@ -23,11 +23,6 @@ class PATHS:
     qa = "/qa/"
 
 
-class Query(BaseModel):
-    question: str
-    document_ids: list[str]
-
-
 class UploadFileResponse(BaseModel):
     document_id: str
 
@@ -39,6 +34,7 @@ class QAResponse(BaseModel):
 
 class QARequest(BaseModel):
     question: str
+    document_ids: list[str] | None = None
 
 
 @app.middleware("http")
@@ -81,7 +77,7 @@ async def qa(
     llm_service: Annotated[LLMService, Depends(get_llm_service)],
     req: QARequest,
 ) -> QAResponse:
-    chunks = document_service.search(query=req.question)
+    chunks = document_service.search(query=req.question, document_ids=req.document_ids)
     if not chunks:
         return QAResponse(answer=IDK_ANSWER, sources=[])
     chunks_texts = [chnk.text for chnk in chunks]
