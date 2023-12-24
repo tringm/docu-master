@@ -19,6 +19,7 @@ IDK_ANSWER = "Unfortunately, I cannot find the answer to the question."
 
 
 class PATHS:
+    health_check = "/health/"
     upload_file = "/upload/"
     qa = "/qa/"
 
@@ -59,6 +60,15 @@ def get_document_service() -> DocumentService:
 
 def get_llm_service() -> LLMService:
     return LLMService()
+
+
+@app.get(path=PATHS.health_check)
+async def health_check(
+    document_service: Annotated[DocumentService, Depends(get_document_service)],
+    llm_service: Annotated[LLMService, Depends(get_llm_service)],
+) -> Response:
+    document_service.chromadb_client.heartbeat()
+    return JSONResponse(content={"status": "OK"})
 
 
 @app.post(path=PATHS.upload_file)

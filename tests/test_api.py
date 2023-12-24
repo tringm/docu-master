@@ -10,6 +10,11 @@ from src.docs import DocumentChunk, DocumentChunkMetadata, DocumentService
 from tests.test_doc_service import EXAMPLE_PDF_FILE, EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
 
 
+def test_health_endpoint(client: Client) -> None:
+    resp = client.get(url=PATHS.health_check)
+    assert resp.status_code == codes.OK
+
+
 @pytest.mark.parametrize(
     "req_json",
     [
