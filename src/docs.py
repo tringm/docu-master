@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import IO, Any
 from uuid import uuid4
 
-from chromadb import Collection, EphemeralClient, HttpClient
+from chromadb import Collection, EphemeralClient, HttpClient, Settings
 from pydantic import BaseModel, ConfigDict
 from pypdf import PdfReader
 from semantic_text_splitter import CharacterTextSplitter
@@ -31,10 +31,15 @@ class DocumentService(metaclass=ThreadUnsafeSingletonMeta):
 
     def __init__(self, chromadb_in_memory: bool = False) -> None:
         self.logger = get_logger(name=self.__class__.__name__)
+        chromadb_client_settings = Settings(anonymized_telemetry=False)
         if chromadb_in_memory:
-            self.chromadb_client = EphemeralClient(database=CONFIGS.chromadb.database)
+            self.chromadb_client = EphemeralClient(
+                database=CONFIGS.chromadb.database, settings=chromadb_client_settings
+            )
         else:
-            self.chromadb_client = HttpClient(database=CONFIGS.chromadb.database, **CONFIGS.chromadb.client_configs)
+            self.chromadb_client = HttpClient(
+                database=CONFIGS.chromadb.database, settings=chromadb_client_settings, **CONFIGS.chromadb.client_configs
+            )
         self.distance_score_threshold = CONFIGS.chromadb.distance_score_threshold
         self.default_collection = self.chromadb_client.get_or_create_collection(name=self.DEFAULT_COLLECTION_NAME)
 
