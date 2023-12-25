@@ -7,10 +7,10 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import Client
 
-from src.app import app, get_document_service, get_llm_service
-from src.docs import DocumentService
+from src.app import app, get_llm_service, get_vector_store
 from src.llm import LLMService
 from src.logging import get_logger
+from src.vector_store import VectorStore
 from tests import TEST_DIR_PATH
 
 TEST_OUTPUTS_DIR_PATH = TEST_DIR_PATH / "outputs"
@@ -39,11 +39,11 @@ def pytest_collection_modifyitems(session: pytest.Session, config: pytest.Config
 
 
 @pytest.fixture(scope="session")
-def document_service(request: pytest.FixtureRequest) -> DocumentService:
+def vector_store(request: pytest.FixtureRequest) -> VectorStore:
     integration_mode_enabled = request.config.getoption(_FLAGS.integration_tests)
     if integration_mode_enabled:
-        return DocumentService()
-    return DocumentService(chromadb_in_memory=True)
+        return VectorStore()
+    return VectorStore(chromadb_in_memory=True)
 
 
 @pytest.fixture(scope="session")
@@ -52,9 +52,9 @@ def llm_service() -> LLMService:
 
 
 @pytest.fixture(scope="session")
-def application(document_service: DocumentService, llm_service: LLMService) -> FastAPI:
+def application(vector_store: VectorStore, llm_service: LLMService) -> FastAPI:
     app.dependency_overrides = {
-        get_document_service: lambda: document_service,
+        get_vector_store: lambda: vector_store,
         get_llm_service: lambda: llm_service,
     }
     return app

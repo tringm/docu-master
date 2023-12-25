@@ -4,12 +4,9 @@ from uuid import uuid4
 
 import pytest
 
-from src.docs import DocumentChunk, DocumentService
+from src.vector_store import VectorStore
 
-from .data import RESOURCE_DIR_PATH, load_hotpot_qa_test_cases
-
-EXAMPLE_PDF_FILE = RESOURCE_DIR_PATH / "cobra_wiki.pdf"
-EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT = 11
+from .data import load_hotpot_qa_test_cases
 
 
 def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
@@ -28,24 +25,24 @@ def f1_score(predicted: list[str], gold_standard: list[str]) -> float:
 
 
 @pytest.fixture
-def create_collection(document_service: DocumentService) -> Iterator[Callable[[], str]]:
+def create_collection(vector_store: VectorStore) -> Iterator[Callable[[], str]]:
     created_cols = []
 
     def _create_collection() -> str:
         col_name = str(uuid4())
         created_cols.append(col_name)
-        document_service.chromadb_client.create_collection(name=col_name)
+        vector_store.chromadb_client.create_collection(name=col_name)
         return col_name
 
     yield _create_collection
 
     for col in created_cols:
-        document_service.chromadb_client.delete_collection(name=col)
+        vector_store.chromadb_client.delete_collection(name=col)
 
 
 @pytest.mark.evaluation
 def test_document_retrieval(
-    document_service: DocumentService,
+    vector_store: VectorStore,
     create_collection: Callable[[], str],
     test_case_out_file: Path,
 ) -> None:
@@ -58,8 +55,8 @@ def test_document_retrieval(
             f.write(f"Question: {case.question}\nExpected:\n{case.sources_as_str()}\n")
 
             collection = create_collection()
-            document_service.add_multiple_document_chunks(collection_name=collection, chunks=case.document_chunks)
-            retrieval_res = document_service.search(collection_name=collection, query=case.question)
+            vector_store.add_multiple_document_chunks(collection_name=collection, chunks=case.document_chunks)
+            retrieval_res = vector_store.search(collection_name=collection, query=case.question)
 
             retrieved_ids = [chunk.id for chunk in retrieval_res]
             expected_ids = [chunk.id for chunk in case.source_chunks]
@@ -73,11 +70,3 @@ def test_document_retrieval(
     avg_f1_score = sum(f1_scores) / len(f1_scores)
     min_f1_score = 0.35
     assert avg_f1_score > min_f1_score, f"Expected avg f1 score to be above {min_f1_score}"
-
-
-def test_parse_pdf(document_service: DocumentService) -> None:
-    chunks = document_service.parse_pdf_file(stream=EXAMPLE_PDF_FILE, doc_id=str(uuid4()))
-    assert (
-        len(chunks) == EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
-    ), f"Expected return {EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT} chunks"
-    assert all(isinstance(chunk, DocumentChunk) and chunk.text for chunk in chunks)

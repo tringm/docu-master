@@ -6,8 +6,9 @@ import pytest
 from httpx import Client, Response, codes
 
 from src.app import IDK_ANSWER, PATHS, QARequest, QAResponse, UploadFileResponse
-from src.docs import DocumentChunk, DocumentChunkMetadata, DocumentService
-from tests.test_doc_service import EXAMPLE_PDF_FILE, EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
+from src.docs import DocumentChunk, DocumentChunkMetadata
+from src.vector_store import VectorStore
+from tests.test_docs_parsing import EXAMPLE_PDF_FILE, EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
 
 
 def test_health_endpoint(client: Client) -> None:
@@ -28,17 +29,17 @@ def test_qa_endpoint_bad_request(client: Client, req_json: dict) -> None:
 
 
 @pytest.fixture
-def upload_file(client: Client, document_service: DocumentService) -> Iterator[str]:
+def upload_example_file(client: Client, vector_store: VectorStore) -> Iterator[str]:
     response = client.post(url=PATHS.upload_file, files={"file": EXAMPLE_PDF_FILE.open(mode="rb")})
     assert response.status_code == codes.OK
     resp = UploadFileResponse.model_validate(response.json())
     doc_id = resp.document_id
-    chunks = document_service.get_chunk_by_document_id(document_id=doc_id)
+    chunks = vector_store.get_chunk_by_document_id(document_id=doc_id)
     assert (
         len(chunks) == EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
     ), f"Expected {EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT} chunk uploaded to vector store"
     yield doc_id
-    document_service.default_collection.delete(where={"document_id": {"$eq": doc_id}})
+    vector_store.default_collection.delete(where={"document_id": {"$eq": doc_id}})
 
 
 def _assert_correct_cobra_qa_response(resp: Response) -> None:
@@ -49,17 +50,17 @@ def _assert_correct_cobra_qa_response(resp: Response) -> None:
     assert len(resp.sources) > 0, "Expected answer with sources"
 
 
-def test_qa_endpoint(client: Client, upload_file: str) -> None:
+def test_qa_endpoint(client: Client, upload_example_file: str) -> None:
     resp = client.post(url=PATHS.qa, json=QARequest(question="Is Cobra venomous?").model_dump())
     _assert_correct_cobra_qa_response(resp=resp)
 
 
-def test_qa_endpoint_filter_document(client: Client, document_service: DocumentService, upload_file: str) -> None:
+def test_qa_endpoint_filter_document(client: Client, vector_store: VectorStore, upload_example_file: str) -> None:
     new_doc_id = str(uuid4())
     new_doc_chunk = DocumentChunk(
         id=str(uuid4()), text="Random text", metadata=DocumentChunkMetadata(page=0, document_id=new_doc_id)
     )
-    document_service.add_multiple_document_chunks(chunks=[new_doc_chunk])
+    vector_store.add_multiple_document_chunks(chunks=[new_doc_chunk])
 
     resp = client.post(
         url=PATHS.qa, json=QARequest(question="Is Cobra venomous?", document_ids=[new_doc_id]).model_dump()
@@ -70,6 +71,6 @@ def test_qa_endpoint_filter_document(client: Client, document_service: DocumentS
     assert len(resp.sources) == 0, "Expected return no source"
 
     resp = client.post(
-        url=PATHS.qa, json=QARequest(question="Is Cobra venomous?", document_ids=[upload_file]).model_dump()
+        url=PATHS.qa, json=QARequest(question="Is Cobra venomous?", document_ids=[upload_example_file]).model_dump()
     )
     _assert_correct_cobra_qa_response(resp=resp)

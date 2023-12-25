@@ -9,9 +9,10 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 from .config import CONFIGS
-from .docs import DocumentService
+from .docs import parse_pdf_file
 from .llm import LLMService
 from .logging import logger
+from .vector_store import VectorStore
 
 app = FastAPI()
 
@@ -54,8 +55,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": exc.errors()})
 
 
-def get_document_service() -> DocumentService:
-    return DocumentService()
+def get_vector_store() -> VectorStore:
+    return VectorStore()
 
 
 def get_llm_service() -> LLMService:
@@ -64,30 +65,30 @@ def get_llm_service() -> LLMService:
 
 @app.get(path=PATHS.health_check)
 async def health_check(
-    document_service: Annotated[DocumentService, Depends(get_document_service)],
+    vector_store: Annotated[VectorStore, Depends(get_vector_store)],
     llm_service: Annotated[LLMService, Depends(get_llm_service)],
 ) -> Response:
-    document_service.chromadb_client.heartbeat()
+    vector_store.chromadb_client.heartbeat()
     return JSONResponse(content={"status": "OK"})
 
 
 @app.post(path=PATHS.upload_file)
 async def create_upload_file(
-    file: UploadFile, document_service: Annotated[DocumentService, Depends(get_document_service)]
+    file: UploadFile, vector_store: Annotated[VectorStore, Depends(get_vector_store)]
 ) -> UploadFileResponse:
     doc_id = str(uuid4())
-    doc_chunks = document_service.parse_pdf_file(stream=file.file, doc_id=doc_id)
-    document_service.add_multiple_document_chunks(chunks=doc_chunks)
+    doc_chunks = parse_pdf_file(stream=file.file, doc_id=doc_id)
+    vector_store.add_multiple_document_chunks(chunks=doc_chunks)
     return UploadFileResponse(document_id=doc_id)
 
 
 @app.post(path=PATHS.qa)
 async def qa(
-    document_service: Annotated[DocumentService, Depends(get_document_service)],
+    vector_store: Annotated[VectorStore, Depends(get_vector_store)],
     llm_service: Annotated[LLMService, Depends(get_llm_service)],
     req: QARequest,
 ) -> QAResponse:
-    chunks = document_service.search(query=req.question, document_ids=req.document_ids)
+    chunks = vector_store.search(query=req.question, document_ids=req.document_ids)
     if not chunks:
         return QAResponse(answer=IDK_ANSWER, sources=[])
     chunks_texts = [chnk.text for chnk in chunks]
