@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -24,13 +25,15 @@ def upload_example_pdf_file(client: Client, vector_store: VectorStore) -> Iterat
     vector_store.default_collection.delete(where={"document_id": {"$eq": doc_id}})
 
 
-def test_upload_invalid_file(client: Client, tmpdir: Path) -> None:
-    tmp_txt_file = tmpdir / "text_file.pdf"
-    with tmp_txt_file.open(mode="w") as f:
-        f.write("Some Content")
-    response = client.post(url=PATHS.upload_file, files={"file": tmp_txt_file.open(mode="rb")})
-    assert response.status_code == codes.INTERNAL_SERVER_ERROR
-    assert DocumentParsingError.__name__ in response.text
+def test_upload_invalid_content_type(client: Client, tmpdir: Path) -> None:
+    tmp_json_file = tmpdir / "text_file.json"
+    with tmp_json_file.open(mode="w") as f:
+        json.dump({"content": "some content"}, f)
+    response = client.post(url=PATHS.upload_file, files={"file": tmp_json_file.open(mode="rb")})
+    assert response.status_code == codes.BAD_REQUEST
+    resp_json = response.json()
+    exp_err_msg = {"detail": "Invalid Content-Type: application/json"}
+    assert resp_json == exp_err_msg, f"Expected error response message to be {exp_err_msg}. Got: {resp_json}"
 
 
 def test_upload_text_file(client: Client, vector_store: VectorStore, tmpdir: Path) -> None:
@@ -51,3 +54,12 @@ def test_upload_pdf_file(client: Client, vector_store: VectorStore, upload_examp
     assert (
         len(chunks) == EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
     ), f"Expected {EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT} chunk uploaded to vector store"
+
+
+def test_upload_invalid_pdf_file(client: Client, tmpdir: Path) -> None:
+    tmp_txt_file = tmpdir / "text_file.pdf"
+    with tmp_txt_file.open(mode="w") as f:
+        f.write("Some Content")
+    response = client.post(url=PATHS.upload_file, files={"file": tmp_txt_file.open(mode="rb")})
+    assert response.status_code == codes.INTERNAL_SERVER_ERROR
+    assert DocumentParsingError.__name__ in response.text

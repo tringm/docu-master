@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import uuid4
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request, UploadFile, status
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
@@ -75,7 +75,7 @@ async def health_check(
 @app.post(path=PATHS.upload_file)
 async def upload_file(
     file: UploadFile, vector_store: Annotated[VectorStore, Depends(get_vector_store)]
-) -> JSONResponse | UploadFileResponse:
+) -> UploadFileResponse:
     doc_id = str(uuid4())
     content_type = file.content_type
     if content_type == "application/pdf":
@@ -84,9 +84,7 @@ async def upload_file(
         content = await file.read()
         doc_chunks = parse_text(text=content.decode(), doc_id=doc_id)
     else:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content={"detail": f"Invalid Content-Type: {content_type}"}
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid Content-Type: {content_type}")
     vector_store.add_multiple_document_chunks(chunks=doc_chunks)
     return UploadFileResponse(document_id=doc_id)
 
