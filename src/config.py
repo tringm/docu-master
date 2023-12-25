@@ -33,10 +33,15 @@ class LLMConfig(BaseModel):
     prompt_configs: dict
 
 
+class DocsConfig(BaseModel):
+    chunk_capacity: int | tuple[int, int]
+
+
 class RootConfig(BaseModel):
     uvicorn: UvicornConfig
     chromadb: ChromaDBConfig
     llm: LLMConfig
+    docs: DocsConfig
     log_level: str
 
 

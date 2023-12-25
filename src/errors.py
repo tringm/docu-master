@@ -1,0 +1,2 @@
+class DocumentParsingError(Exception):
+    pass
