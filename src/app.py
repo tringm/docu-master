@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
 from .config import CONFIGS
-from .docs import parse_pdf_file
+from .docs import parse_pdf_file, parse_text
 from .llm import LLMService
 from .logging import logger
 from .vector_store import VectorStore
@@ -73,11 +73,20 @@ async def health_check(
 
 
 @app.post(path=PATHS.upload_file)
-async def create_upload_file(
+async def upload_file(
     file: UploadFile, vector_store: Annotated[VectorStore, Depends(get_vector_store)]
-) -> UploadFileResponse:
+) -> JSONResponse | UploadFileResponse:
     doc_id = str(uuid4())
-    doc_chunks = parse_pdf_file(stream=file.file, doc_id=doc_id)
+    content_type = file.content_type
+    if content_type == "application/pdf":
+        doc_chunks = parse_pdf_file(stream=file.file, doc_id=doc_id)
+    elif content_type.startswith("text/"):
+        content = await file.read()
+        doc_chunks = parse_text(text=content.decode(), doc_id=doc_id)
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"detail": f"Invalid Content-Type: {content_type}"}
+        )
     vector_store.add_multiple_document_chunks(chunks=doc_chunks)
     return UploadFileResponse(document_id=doc_id)
 

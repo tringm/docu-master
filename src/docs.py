@@ -37,9 +37,11 @@ def split_text(text: str) -> list[str]:
         raise DocumentParsingError("Failed to split text into chunks") from e
 
 
-def parse_pdf_file(
-    stream: str | IO[Any] | Path, doc_id: str, chunk_capacity: int | tuple[int, int] = (256, 512)
-) -> list[DocumentChunk]:
+def _generate_chunk_id(doc_id: str, page_idx: int, chunk_idx: int) -> str:
+    return f"{doc_id}_p{page_idx}_c{chunk_idx}"
+
+
+def parse_pdf_file(stream: str | IO[Any] | Path, doc_id: str) -> list[DocumentChunk]:
     logger.info("Parsing PDF stream")
 
     doc_chunks = []
@@ -58,7 +60,7 @@ def parse_pdf_file(
             raise DocumentParsingError(f"Failed to parse page {page_idx}") from e
         doc_chunks += [
             DocumentChunk(
-                id=f"{doc_id}_p{page_idx}_c{chunk_idx}",
+                id=_generate_chunk_id(doc_id=doc_id, page_idx=page_idx, chunk_idx=chunk_idx),
                 text=chunk_txt,
                 metadata=DocumentChunkMetadata(document_id=doc_id, page=page_idx, **doc_meta),
             )
@@ -66,3 +68,16 @@ def parse_pdf_file(
         ]
 
     return doc_chunks
+
+
+def parse_text(text: str, doc_id: str) -> list[DocumentChunk]:
+    logger.info("Parsing text")
+    page_idx = 1
+    return [
+        DocumentChunk(
+            id=_generate_chunk_id(doc_id=doc_id, page_idx=page_idx, chunk_idx=chunk_idx),
+            text=chunk_txt,
+            metadata=DocumentChunkMetadata(document_id=doc_id, page=page_idx),
+        )
+        for chunk_idx, chunk_txt in enumerate(split_text(text=text))
+    ]
