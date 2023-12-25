@@ -9,6 +9,15 @@ from .logging import get_logger
 from .singleton import ThreadUnsafeSingletonMeta
 
 
+class VectorStoreError(Exception):
+    pass
+
+
+class CollectionNotFoundError(VectorStoreError):
+    def __init__(self, collection_name: str):
+        super().__init__(f"Collection({collection_name}) not found")
+
+
 class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
     DEFAULT_COLLECTION_NAME = "default"
 
@@ -29,9 +38,9 @@ class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
     def get_collection(self, name: str) -> Collection:
         try:
             return self.chromadb_client.get_collection(name=name)
-        except Exception:
-            self.logger.exception("Failed to retrieve collection %s", name)
-            raise
+        except Exception as e:
+            self.logger.exception("Failed to retrieve collection %s: %s", name, e)
+            raise CollectionNotFoundError(collection_name=name) from e
 
     def add_multiple_document_chunks(
         self, chunks: Iterable[DocumentChunk], collection_name: str = DEFAULT_COLLECTION_NAME
@@ -42,9 +51,10 @@ class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
                 *((chunk.id, chunk.metadata.model_dump(), chunk.text) for chunk in chunks), strict=True
             )
             collection.add(ids=list(ids), metadatas=list(metas), documents=list(docs))  # chroma check for type list
-        except Exception:
-            self.logger.exception("Failed to add chunks to collection %s", collection_name)
-            raise
+        except Exception as e:
+            msg = f"Failed to add chunks to Collection({collection_name})"
+            self.logger.exception("%s: %s", msg, e)
+            raise VectorStoreError(msg) from e
 
     def search(
         self,
@@ -58,9 +68,9 @@ class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
         if document_ids:
             where = {"document_id": {"$in": document_ids}}
 
-        log_msg = f"Query colection({collection_name}) with '{query}'"
+        msg = f"Query Collection({collection_name}) with {query}"
         if where:
-            log_msg += f" {where}"
+            msg += f" where({where})"
         try:
             res = collection.query(
                 query_texts=query,
@@ -69,8 +79,8 @@ class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
                 include=["metadatas", "documents", "distances"],
             )
         except Exception as e:
-            self.logger.exception("Failed to %s: %s", log_msg, e)
-            raise
+            self.logger.exception("Failed to %s: %s", msg, e)
+            raise VectorStoreError(f"Failed to {msg}") from e
 
         ret_chunks = [
             DocumentChunk(id=c_id, text=text, metadata=DocumentChunkMetadata(**meta))
@@ -79,7 +89,7 @@ class VectorStore(metaclass=ThreadUnsafeSingletonMeta):
             )
             if score < self.distance_score_threshold
         ]
-        self.logger.info("%s got %s results", log_msg, len(ret_chunks))
+        self.logger.info("%s got %s results", msg, len(ret_chunks))
         return ret_chunks
 
     def get_chunk_by_document_id(

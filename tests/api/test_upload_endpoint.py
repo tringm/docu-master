@@ -5,7 +5,7 @@ import pytest
 from httpx import Client, Response, codes
 
 from src.app import PATHS, UploadFileResponse
-from src.errors import DocumentParsingError
+from src.docs import DocumentParsingError
 from src.vector_store import VectorStore
 from tests.test_docs_parsing import EXAMPLE_PDF_FILE, EXAMPLE_PDF_FILE_EXPECTED_CHUNK_COUNT
 

@@ -6,7 +6,6 @@ from pypdf import PdfReader
 from semantic_text_splitter import CharacterTextSplitter
 
 from .config import CONFIGS
-from .errors import DocumentParsingError
 from .logging import logger
 
 
@@ -81,3 +80,7 @@ def parse_text(text: str, doc_id: str) -> list[DocumentChunk]:
         )
         for chunk_idx, chunk_txt in enumerate(split_text(text=text))
     ]
+
+
+class DocumentParsingError(Exception):
+    pass
